@@ -1,7 +1,7 @@
+const headers = { "Content-Type": "application/json" };
+
 const loginForm = document.querySelector(".login");
 const loginOutput = document.querySelector(".login .output");
-
-const headers = { "Content-Type": "application/json" };
 
 loginForm.addEventListener("submit", async event => {
 	event.preventDefault();
@@ -30,6 +30,59 @@ loginForm.addEventListener("submit", async event => {
 		loginOutput.classList.add("error");
 	else
 		loginOutput.classList.remove("error");
+});
+
+const registerForm = document.querySelector(".register");
+const registerOutput = document.querySelector(".register .output");
+
+registerForm.addEventListener("submit", async event => {
+	event.preventDefault();
+
+	registerOutput.textContent = "";
+
+	const data = new FormData(registerForm);
+
+	const username = data.get("username");
+	const password = data.get("new-password");
+
+	const res = await fetch("/auth", {
+		method: "put",
+		headers,
+		body: JSON.stringify({
+			username,
+			password,
+		}),
+	});
+
+	const json = await res.json();
+
+	registerOutput.textContent = JSON.stringify(json, null, 4);
+
+	if (res.status !== 200)
+		registerOutput.classList.add("error");
+	else
+		registerOutput.classList.remove("error");
+});
+
+const logoutButton = document.querySelector(".logout button");
+const logoutOutput = document.querySelector(".logout pre");
+
+logoutButton.addEventListener("click", async () => {
+	logoutOutput.textContent = "";
+
+	const res = await fetch("/auth", {
+		method: "delete",
+		headers,
+	});
+
+	const json = await res.json();
+
+	logoutOutput.textContent = JSON.stringify(json, null, 4);
+
+	if (res.status !== 200)
+		logoutOutput.classList.add("error");
+	else
+		logoutOutput.classList.remove("error");
 });
 
 const startActiveLog = document.querySelector(".active-log .start");
@@ -139,6 +192,7 @@ getLogs.addEventListener("click", async () => {
 	if (res.status !== 200) {
 		logsDbg.textContent = JSON.stringify(json, null, 4);
 		logsDbg.classList.add("error");
+		return;
 	} else logsDbg.classList.remove("error");
 
 	for (const log of json) {
@@ -156,15 +210,7 @@ getLogs.addEventListener("click", async () => {
 		log.lifts.map(async lift => {
 			const p = document.createElement("p");
 
-			const res = await fetch("/exercises/" + lift.exerciseId, {
-				headers
-			});
-
-			const json = await res.json();
-
-			const exercise = json[0].name;
-
-			p.textContent = `${exercise} - ${lift.sets}×${lift.reps}, ${lift.weight} kg`;
+			p.textContent = `${lift.exercise} - ${lift.sets}×${lift.reps}, ${lift.weight} kg`;
 
 			const liftLi = document.createElement("li");
 			liftLi.appendChild(p);

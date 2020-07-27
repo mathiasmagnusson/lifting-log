@@ -6,6 +6,9 @@ import { InvalidInput } from "./errors";
 
 const router = express.Router();
 
+/**
+ * List all exercises
+ */
 router.get("/", async (_req, res, next) => {
 	try {
 		const exercises = await db.exercises.find();
@@ -16,6 +19,9 @@ router.get("/", async (_req, res, next) => {
 	}
 });
 
+/**
+ * List all exercises matching query or by id
+ */
 router.get("/:query", async (req, res, next) => {
 	try {
 		const { query } = req.params;

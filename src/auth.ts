@@ -9,11 +9,44 @@ import validateStructure from "./validate";
 
 const router = express.Router();
 
+const authed: Handler = async (req, res, next) => {
+	const { sid } = req.cookies;
+
+	if (typeof sid !== "string")
+		return next();
+
+	const account = await db.accounts.findOneAndUpdate(
+		{
+			"session.id": sid,
+			"session.lastActivity": { $gt: Date.now() - 1000 * 60 * 60 * 2 }
+		},
+		{ $set: { "session.lastActivity": Date.now() } },
+		{ returnOriginal: true },
+	);
+
+	if (!account) {
+		res.clearCookie("sid");
+		return next();
+	}
+
+	req.user = account;
+
+	next();
+};
+
+const withAuth: Handler = async (req, _res, next) => {
+	if (!req.user) next(new AuthNeeded());
+	else next();
+};
+
 const validateLogin = validateStructure({
 	username: String,
 	password: String,
 });
 
+/**
+ * Login
+ */
 router.post("/", async (req, res, next) => {
 	try {
 		try {
@@ -66,7 +99,10 @@ const validateSignup = validateStructure({
 	},
 });
 
-router.post("/register", async (req, res, next) => {
+/**
+ * Register
+ */
+router.put("/", async (req, res, next) => {
 	try {
 		try {
 			await validateSignup(req.body, "body");
@@ -95,34 +131,17 @@ router.post("/register", async (req, res, next) => {
 	}
 });
 
-const authed: Handler = async (req, res, next) => {
-	const { sid } = req.cookies;
+router.delete("/", withAuth, async (req, res, next) => {
+	try {
+		await db.accounts.findOneAndUpdate(
+			{ _id: req.user._id },
+			{ $set: { session: null } },
+		);
 
-	if (typeof sid !== "string")
-		return next();
-
-	const account = await db.accounts.findOneAndUpdate(
-		{
-			"session.id": sid,
-			"session.lastActivity": { $gt: Date.now() - 1000 * 60 * 60 * 2 }
-		},
-		{ $set: { "session.lastActivity": Date.now() } },
-		{ returnOriginal: true },
-	);
-
-	if (!account) {
-		res.clearCookie("sid");
-		return next();
+		res.send({});
+	} catch (err) {
+		next(err);
 	}
-
-	req.user = account;
-
-	next();
-};
-
-const withAuth: Handler = async (req, _res, next) => {
-	if (!req.user) next(new AuthNeeded());
-	else next();
-};
+});
 
 export { router as auth, authed, withAuth };

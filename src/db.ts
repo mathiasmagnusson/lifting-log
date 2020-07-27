@@ -27,7 +27,6 @@ export interface Log {
 export const logs = db.get<Log>("logs");
 
 export interface Lift {
-	_id: string;
 	exerciseId: string;
 	weight: number;
 	sets: number;

@@ -5,15 +5,90 @@ import { InvalidUserState, InvalidInput } from "./errors";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-	const logs = await db.logs.find({
-		accountId: req.user._id,
-		_id: { $ne: req.user.activeLogId },
-	});
+interface PopulatedLog {
+	_id: string;
+	startTime: number;
+	endTime?: number;
+	lifts: PopulatedLift[];
+}
 
-	res.send(logs);
+interface PopulatedLift {
+	exercise: string;
+	weight: number;
+	sets: number;
+	reps: number;
+}
+
+async function populateLog(log?: db.Log): Promise<PopulatedLog | null> {
+	if (!log) return null;
+	const logs = await populateLogs([log]);
+	return logs[0];
+}
+
+async function populateLogs(logs: db.Log[]): Promise<PopulatedLog[]> {
+	const exercises = new Map<string, [number, number][]>();
+	for (let i = 0; i < logs.length; i++) {
+		const log = logs[i];
+		for (let j = 0; j < log.lifts.length; j++) {
+			const lifts = log.lifts[j];
+			if (!exercises.has(lifts.exerciseId))
+				exercises.set(lifts.exerciseId, []);
+			exercises.get(lifts.exerciseId)?.push([i, j]);
+		}
+	}
+
+	const populatedLogs: PopulatedLog[] = [];
+
+	for (const log of logs) {
+		populatedLogs.push({
+			_id: log._id,
+			startTime: log.startTime,
+			endTime: log.endTime,
+			lifts: log.lifts.map(lift => ({
+				exercise: "",
+				weight: lift.weight,
+				sets: lift.sets,
+				reps: lift.reps,
+			})),
+		});
+	}
+
+	for (const [id, indices] of exercises.entries()) {
+		const exercise = await db.exercises.findOne({
+			_id: id,
+		});
+
+		if (!exercise) throw new Error();
+
+		const name = exercise.name;
+
+		for (const [i, j] of indices) {
+			populatedLogs[i].lifts[j].exercise = name;
+		}
+	}
+
+	return populatedLogs;
+}
+
+/**
+ * Get users finished logs
+ */
+router.get("/", async (req, res, next) => {
+	try {
+		const logs = await db.logs.find({
+			accountId: req.user._id,
+			_id: { $ne: req.user.activeLogId },
+		});
+
+		res.send(await populateLogs(logs));
+	} catch (err) {
+		next(err);
+	}
 });
 
+/**
+ * Start a new log
+ */
 router.post("/", async (req, res, next) => {
 	try {
 		if (req.user.activeLogId)
@@ -39,6 +114,9 @@ router.post("/", async (req, res, next) => {
 	}
 });
 
+/**
+ * Finish active log or delete if empty
+ */
 router.post("/finish", async (req, res, next) => {
 	try {
 		if (!req.user.activeLogId)
@@ -70,6 +148,9 @@ router.post("/finish", async (req, res, next) => {
 	}
 });
 
+/**
+ * Get log by id or `active`
+ */
 router.get("/:id", async (req, res, next) => {
 	try {
 		const logId = req.params.id === "active"
@@ -78,12 +159,20 @@ router.get("/:id", async (req, res, next) => {
 
 		const log = await db.logs.findOne({ _id: logId });
 
-		res.send(log ?? "null");
+		if (!log) return res.send("null");
+
+		const populatedLog = await populateLog(log);
+
+		console.log(populatedLog);
+		res.send(populatedLog);
 	} catch (err) {
 		next(err);
 	}
 });
 
+/**
+ * Add lift to log by id or `active`
+ */
 router.post("/:id", async (req, res, next) => {
 	try {
 		const logId = req.params.id === "active"
@@ -110,12 +199,15 @@ router.post("/:id", async (req, res, next) => {
 			},
 		});
 
-		res.send(log);
+		res.send(await populateLog(log));
 	} catch (err) {
 		next(err);
 	}
 });
 
+/**
+ * Delete lift from log by id or `active`, and index of lift
+ */
 router.delete("/:id/:index", async (req, res, next) => {
 	try {
 		const { index, id } = req.params;
@@ -143,6 +235,9 @@ router.delete("/:id/:index", async (req, res, next) => {
 	}
 });
 
+/**
+ * Delete log
+ */
 router.delete("/:id", async (req, res, next) => {
 	try {
 		const logId = req.params.id === "active"
