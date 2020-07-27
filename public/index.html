@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifting Log</title>
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+	<form class="login">
+		<h2>Login</h2>
+		<div>
+			<label for="username">Username:</label>
+			<input id="username" type="text" name="username" />
+		</div>
+		<div>
+			<label for="password">Password:</label>
+			<input id="password" type="password" name="password" />
+		</div>
+		<input type="submit" value="Log in" />
+		<pre class="output">
+		</pre>
+	</form>
+	<section class="active-log">
+		<h2>Active log</h2>
+		<button class="start">start</button>
+		<button class="get">get</button>
+		<button class="finish">finish</button>
+		<form class="add">
+			<div>
+				<label for="exercise">Exercise:</label>
+				<input id="exercise" type="text" name="exercise" />
+			</div>
+			<div>
+				<label for="weight">Weight:</label>
+				<input id="weight" type="number" name="weight" />
+			</div>
+			<div>
+				<label for="sets">Sets:</label>
+				<input id="sets" type="number" name="sets" />
+			</div>
+			<div>
+				<label for="reps">Reps:</label>
+				<input id="reps" type="number" name="reps" />
+			</div>
+			<input type="submit" value="Add" />
+		</form>
+		<pre></pre>
+	</section>
+	<section class="logs">
+		<h2>Logs</h2>
+		<button class="get">get</button>
+		<ul>
+		</ul>
+		<pre></pre>
+	</section>
+	<script src="script.js"></script>
+</body>
+</html>
