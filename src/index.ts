@@ -26,4 +26,4 @@ app.use("/exercises", exercises);
 
 app.use(errorHandler);
 
-app.listen(8080);
+app.listen(8080, "localhost");
