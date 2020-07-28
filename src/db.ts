@@ -1,8 +1,12 @@
 import monk from "monk";
 
 import validateStructure from "./validate";
+import creds from "./creds";
 
-const db = monk("localhost/lifting-log");
+const db = monk(
+	`lifting-log:${creds.db.pass}@localhost/lifting-log`,
+	{ authSource: "admin" }
+);
 
 export interface Account {
 	_id: string;
