@@ -8,7 +8,9 @@ export const loggedIn = writable<Promise<boolean>>(initLogin());
 
 async function initLogin () {
 	const res = await fetch("/auth", { headers });
-	return await res.json();
+	const loggedIn = await res.json();
+	if (loggedIn) updateActiveLog();
+	return loggedIn;
 }
 
 export async function login (username: string, password: string): Promise<boolean> {
@@ -66,7 +68,6 @@ export interface Lift {
 }
 
 export const activeLog = writable<Log | null | "loading">("loading");
-updateActiveLog();
 
 async function updateActiveLog (): Promise<void> {
 	const res = await fetch("/logs/active", { headers });
