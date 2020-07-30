@@ -108,7 +108,7 @@ router.post("/", async (req, res, next) => {
 			},
 		});
 
-		res.send(await db.logs.findOne({ _id: req.user.activeLogId }));
+		res.send({});
 	} catch (err) {
 		next(err);
 	}
@@ -163,7 +163,6 @@ router.get("/:id", async (req, res, next) => {
 
 		const populatedLog = await populateLog(log);
 
-		console.log(populatedLog);
 		res.send(populatedLog);
 	} catch (err) {
 		next(err);
@@ -187,7 +186,6 @@ router.post("/:id", async (req, res, next) => {
 		try {
 			await db.validateLift(lift, "body");
 		} catch (err) {
-			console.error(err);
 			throw new InvalidInput(err.message);
 		}
 
@@ -199,7 +197,7 @@ router.post("/:id", async (req, res, next) => {
 			},
 		});
 
-		res.send(await populateLog(log));
+		res.send({});
 	} catch (err) {
 		next(err);
 	}
