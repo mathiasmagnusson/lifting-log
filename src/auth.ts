@@ -44,6 +44,10 @@ const validateLogin = validateStructure({
 	password: String,
 });
 
+router.get("/", (req, res) => {
+	res.send(req.user ? "true" : "false");
+});
+
 /**
  * Login
  */
