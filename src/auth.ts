@@ -72,7 +72,7 @@ router.post("/", async (req, res, next) => {
 
 		const sid = crypto.randomBytes(18).toString("base64");
 
-		res.cookie("sid", sid);
+		res.cookie("sid", sid, { secure: true });
 
 		await db.accounts.findOneAndUpdate(
 			{ _id: account._id },
