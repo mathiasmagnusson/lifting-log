@@ -1,0 +1,15 @@
+[Unit]
+Description=Lifting Log backend
+After=network.target
+Requires=mongod.service
+
+[Service]
+Type=simple
+User=mathias
+WorkingDirectory=/var/www/ll.magnusson.space/
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
